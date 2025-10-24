@@ -22,6 +22,38 @@ export class ContractService {
     this.contractAddress = TonAddress.parse(CONTRACT_ADDRESS);
   }
 
+  private async retryWithBackoff<T>(
+    fn: () => Promise<T>,
+    maxRetries = 3,
+    baseDelay = 1000,
+    maxDelay = 30000
+  ): Promise<T> {
+    for (let i = 0; i < maxRetries; i++) {
+      try {
+        return await fn();
+      } catch (error) {
+        if (i === maxRetries - 1) throw error;
+
+        // Check if it's a rate limit error
+        const isRateLimit = error instanceof Error && (
+          error.message.includes("429") ||
+          error.message.includes("rate limit") ||
+          error.message.includes("too many requests")
+        );
+
+        if (isRateLimit) {
+          const delay = Math.min(baseDelay * Math.pow(2, i), maxDelay);
+          console.log(`RATE LIMIT: Retrying in ${delay}ms (attempt ${i + 1}/${maxRetries})`);
+          await new Promise(resolve => setTimeout(resolve, delay));
+        } else {
+          // For non-rate-limit errors, throw immediately
+          throw error;
+        }
+      }
+    }
+    throw new Error("Max retries exceeded");
+  }
+
   private logApiCall(method: string) {
     ContractService.callCount++;
     const now = Date.now();
@@ -40,84 +72,64 @@ export class ContractService {
   }
 
   /**
-   * Fetch current contract state
-   */
-  async getState(): Promise<ContractState> {
-    const timestamp = new Date().toISOString();
-    this.logApiCall("getState");
-    console.log(
-      `[${timestamp}] ContractService.getState() - Making API call to ${TESTNET_ENDPOINT}`,
-    );
+    * Fetch current contract state
+    */
+   async getState(): Promise<ContractState> {
+     const timestamp = new Date().toISOString();
+     this.logApiCall("getState");
+     console.log(
+       `[${timestamp}] ContractService.getState() - Making API call to ${TESTNET_ENDPOINT}`,
+     );
 
-    try {
-      const contract = this.client.open(
-        CertificationNFT.fromAddress(this.contractAddress),
-      );
+     return this.retryWithBackoff(async () => {
+       const contract = this.client.open(
+         CertificationNFT.fromAddress(this.contractAddress),
+       );
 
-      const state = await contract.getState();
-      console.log(
-        `[${timestamp}] ContractService.getState() - API call successful`,
-      );
+       const state = await contract.getState();
+       console.log(
+         `[${timestamp}] ContractService.getState() - API call successful`,
+       );
 
-      return {
-        owner: state.owner.toString(),
-        total: state.total,
-        nextId: state.nextId,
-        base_uri: state.base_uri,
-      };
-    } catch (error) {
-      console.error(
-        `[${timestamp}] ContractService.getState() - API call failed:`,
-        error,
-      );
-
-      // Log specific rate limit errors
-      if (error instanceof Error && error.message.includes("429")) {
-        console.error(
-          `[${timestamp}] RATE LIMIT DETECTED in getState() - TON API returned 429`,
-        );
-      }
-
-      throw new Error("Failed to fetch contract state");
-    }
-  }
+       return {
+         owner: state.owner.toString(),
+         total: state.total,
+         nextId: state.nextId,
+         base_uri: state.base_uri,
+       };
+     });
+   }
 
   /**
-   * Check if an address is an admin
-   */
-  async isAdmin(address: string): Promise<boolean> {
-    const timestamp = new Date().toISOString();
-    this.logApiCall("isAdmin");
-    console.log(
-      `[${timestamp}] ContractService.isAdmin() - Making API call to ${TESTNET_ENDPOINT}`,
-    );
+    * Check if an address is an admin
+    */
+   async isAdmin(address: string): Promise<boolean> {
+     const timestamp = new Date().toISOString();
+     this.logApiCall("isAdmin");
+     console.log(
+       `[${timestamp}] ContractService.isAdmin() - Making API call to ${TESTNET_ENDPOINT}`,
+     );
 
-    try {
-      const contract = this.client.open(
-        CertificationNFT.fromAddress(this.contractAddress),
-      );
+     try {
+       return await this.retryWithBackoff(async () => {
+         const contract = this.client.open(
+           CertificationNFT.fromAddress(this.contractAddress),
+         );
 
-      const result = await contract.getIsAdmin(TonAddress.parse(address));
-      console.log(
-        `[${timestamp}] ContractService.isAdmin() - API call successful`,
-      );
-      return result;
-    } catch (error) {
-      console.error(
-        `[${timestamp}] ContractService.isAdmin() - API call failed:`,
-        error,
-      );
-
-      // Log specific rate limit errors
-      if (error instanceof Error && error.message.includes("429")) {
-        console.error(
-          `[${timestamp}] RATE LIMIT DETECTED in isAdmin() - TON API returned 429`,
-        );
-      }
-
-      return false;
-    }
-  }
+         const result = await contract.getIsAdmin(TonAddress.parse(address));
+         console.log(
+           `[${timestamp}] ContractService.isAdmin() - API call successful`,
+         );
+         return result;
+       });
+     } catch (error) {
+       console.error(
+         `[${timestamp}] ContractService.isAdmin() - API call failed:`,
+         error,
+       );
+       return false;
+     }
+   }
 
   /**
    * Get token data by ID

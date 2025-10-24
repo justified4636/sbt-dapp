@@ -25,4 +25,5 @@ export interface TransactionResult {
   success: boolean;
   hash?: string;
   error?: string;
+  tokenId?: bigint;
 }
