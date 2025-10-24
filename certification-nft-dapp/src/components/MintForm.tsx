@@ -76,17 +76,22 @@ export const MintForm = ({ onSuccess }: MintFormProps) => {
         <button
           type="submit"
           disabled={loading}
-          className="w-full bg-pink-600 hover:bg-pink-700 disabled:bg-gray-700 text-white font-medium py-3 rounded-lg transition-colors flex items-center justify-center gap-2"
+          className="w-full relative bg-gradient-to-r from-pink-600 to-pink-700 hover:from-pink-500 hover:to-pink-600 disabled:from-gray-700 disabled:to-gray-600 text-white font-medium py-3 rounded-lg transition-all duration-300 transform hover:scale-[1.02] active:scale-[0.98] shadow-lg hover:shadow-pink-500/25 disabled:transform-none disabled:shadow-none overflow-hidden group"
         >
-          {loading ? (
-            <>
-              <Loader2 className="w-5 h-5 animate-spin" /> Minting...
-            </>
-          ) : (
-            <>
-              <Award className="w-5 h-5" /> Mint Certificate
-            </>
-          )}
+          <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-700 ease-out"></div>
+          <div className="relative flex items-center justify-center gap-2">
+            {loading ? (
+              <>
+                <Loader2 className="w-5 h-5 animate-spin animate-pulse" />
+                <span>Minting...</span>
+              </>
+            ) : (
+              <>
+                <Award className="w-5 h-5 group-hover:animate-bounce" />
+                <span>Mint Certificate</span>
+              </>
+            )}
+          </div>
         </button>
       </form>
     </div>

@@ -26,7 +26,7 @@ export const TokenViewer = () => {
 
   return (
     <div className="bg-gray-800 rounded-2xl shadow-md border border-gray-700 p-4 sm:p-6">
-      <h2 className="text-xl font-bold mb-4">View Certificate</h2>
+      <h2 className="text-xl font-bold mb-4 text-white">View Certificate</h2>
       <form onSubmit={handleSubmit} className="mb-6 flex gap-2">
         <input
           type="number"

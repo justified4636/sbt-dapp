@@ -126,27 +126,31 @@ export const NFTScanner = () => {
         <button
           onClick={handleScan}
           disabled={scanning}
-          className="flex-1 bg-blue-600 hover:bg-blue-700 disabled:bg-gray-700 text-white font-medium py-3 rounded-lg transition-colors flex items-center justify-center gap-2"
+          className="flex-1 relative bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-500 hover:to-blue-600 disabled:from-gray-700 disabled:to-gray-600 text-white font-medium py-3 rounded-lg transition-all duration-300 transform hover:scale-[1.02] active:scale-[0.98] shadow-lg hover:shadow-blue-500/25 disabled:transform-none disabled:shadow-none overflow-hidden group"
         >
-          {scanning ? (
-            <>
-              <Loader2 className="w-5 h-5 animate-spin" />
-              Scanning Blockchain...
-            </>
-          ) : (
-            <>
-              <Search className="w-5 h-5" />
-              Scan All NFTs
-            </>
-          )}
+          <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-700 ease-out"></div>
+          <div className="relative flex items-center justify-center gap-2">
+            {scanning ? (
+              <>
+                <Loader2 className="w-5 h-5 animate-spin" />
+                <span className="animate-pulse">Scanning Blockchain...</span>
+              </>
+            ) : (
+              <>
+                <Search className="w-5 h-5 group-hover:animate-bounce" />
+                <span>Scan All NFTs</span>
+              </>
+            )}
+          </div>
         </button>
 
         {nfts.length > 0 && (
           <button
             onClick={handleClear}
-            className="px-4 py-3 bg-gray-700 hover:bg-gray-600 text-white font-medium rounded-lg transition-colors"
+            className="px-4 py-3 bg-gradient-to-r from-gray-700 to-gray-600 hover:from-gray-600 hover:to-gray-500 text-white font-medium rounded-lg transition-all duration-300 transform hover:scale-[1.02] active:scale-[0.98] shadow-lg hover:shadow-gray-500/25 relative overflow-hidden group"
           >
-            Clear
+            <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/10 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-700 ease-out"></div>
+            <span className="relative">Clear</span>
           </button>
         )}
       </div>
